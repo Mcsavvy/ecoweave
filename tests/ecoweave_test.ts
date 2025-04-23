@@ -20,6 +20,74 @@ Clarinet.test({
 });
 
 Clarinet.test({
+    name: "EcoWeave: Dispute Initiation and Resolution",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const wallet1 = accounts.get('wallet_1')!;
+        const wallet2 = accounts.get('wallet_2')!;
+        const wallet3 = accounts.get('wallet_3')!;
+        
+        // Create project
+        let block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'create-project', [
+                types.utf8('Community Garden Cleanup'),
+                types.uint(Math.floor(Date.now() / 1000) + 86400),
+                types.uint(3),           // Required participants
+                types.uint(200)          // Reward per participant
+            ], deployer.address)
+        ]);
+
+        const projectId = block.receipts[0].result.expectOk().toString();
+
+        // Register participants
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'register-for-project', [
+                types.uint(parseInt(projectId))
+            ], wallet1.address),
+            Tx.contractCall('ecoweave', 'register-for-project', [
+                types.uint(parseInt(projectId))
+            ], wallet2.address)
+        ]);
+
+        // Submit proof
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'submit-project-proof', [
+                types.uint(parseInt(projectId)),
+                types.utf8('https://example.com/proof.jpg')
+            ], wallet1.address)
+        ]);
+
+        // Initiate dispute against wallet1
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'initiate-dispute', [
+                types.uint(parseInt(projectId)),
+                types.principal(wallet1.address),
+                types.utf8('Suspicious proof submission')
+            ], wallet2.address)
+        ]);
+
+        const disputeId = block.receipts[0].result.expectOk().toString();
+
+        // Vote on dispute
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'vote-on-dispute', [
+                types.uint(parseInt(disputeId)),
+                types.bool(true)
+            ], wallet3.address)
+        ]);
+
+        // Resolve dispute
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'resolve-dispute', [
+                types.uint(parseInt(disputeId))
+            ], deployer.address)
+        ]);
+
+        block.receipts[0].result.expectOk();
+    }
+});
+
+Clarinet.test({
     name: "EcoWeave: Project Registration",
     async fn(chain: Chain, accounts: Map<string, Account>) {
         const deployer = accounts.get('deployer')!;
@@ -43,6 +111,74 @@ Clarinet.test({
             Tx.contractCall('ecoweave', 'register-for-project', [
                 types.uint(parseInt(projectId))
             ], wallet1.address)
+        ]);
+
+        block.receipts[0].result.expectOk();
+    }
+});
+
+Clarinet.test({
+    name: "EcoWeave: Dispute Initiation and Resolution",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const wallet1 = accounts.get('wallet_1')!;
+        const wallet2 = accounts.get('wallet_2')!;
+        const wallet3 = accounts.get('wallet_3')!;
+        
+        // Create project
+        let block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'create-project', [
+                types.utf8('Community Garden Cleanup'),
+                types.uint(Math.floor(Date.now() / 1000) + 86400),
+                types.uint(3),           // Required participants
+                types.uint(200)          // Reward per participant
+            ], deployer.address)
+        ]);
+
+        const projectId = block.receipts[0].result.expectOk().toString();
+
+        // Register participants
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'register-for-project', [
+                types.uint(parseInt(projectId))
+            ], wallet1.address),
+            Tx.contractCall('ecoweave', 'register-for-project', [
+                types.uint(parseInt(projectId))
+            ], wallet2.address)
+        ]);
+
+        // Submit proof
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'submit-project-proof', [
+                types.uint(parseInt(projectId)),
+                types.utf8('https://example.com/proof.jpg')
+            ], wallet1.address)
+        ]);
+
+        // Initiate dispute against wallet1
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'initiate-dispute', [
+                types.uint(parseInt(projectId)),
+                types.principal(wallet1.address),
+                types.utf8('Suspicious proof submission')
+            ], wallet2.address)
+        ]);
+
+        const disputeId = block.receipts[0].result.expectOk().toString();
+
+        // Vote on dispute
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'vote-on-dispute', [
+                types.uint(parseInt(disputeId)),
+                types.bool(true)
+            ], wallet3.address)
+        ]);
+
+        // Resolve dispute
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'resolve-dispute', [
+                types.uint(parseInt(disputeId))
+            ], deployer.address)
         ]);
 
         block.receipts[0].result.expectOk();
@@ -94,6 +230,74 @@ Clarinet.test({
                 types.uint(parseInt(projectId)),
                 types.principal(wallet1.address),
                 types.bool(true)
+            ], deployer.address)
+        ]);
+
+        block.receipts[0].result.expectOk();
+    }
+});
+
+Clarinet.test({
+    name: "EcoWeave: Dispute Initiation and Resolution",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const wallet1 = accounts.get('wallet_1')!;
+        const wallet2 = accounts.get('wallet_2')!;
+        const wallet3 = accounts.get('wallet_3')!;
+        
+        // Create project
+        let block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'create-project', [
+                types.utf8('Community Garden Cleanup'),
+                types.uint(Math.floor(Date.now() / 1000) + 86400),
+                types.uint(3),           // Required participants
+                types.uint(200)          // Reward per participant
+            ], deployer.address)
+        ]);
+
+        const projectId = block.receipts[0].result.expectOk().toString();
+
+        // Register participants
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'register-for-project', [
+                types.uint(parseInt(projectId))
+            ], wallet1.address),
+            Tx.contractCall('ecoweave', 'register-for-project', [
+                types.uint(parseInt(projectId))
+            ], wallet2.address)
+        ]);
+
+        // Submit proof
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'submit-project-proof', [
+                types.uint(parseInt(projectId)),
+                types.utf8('https://example.com/proof.jpg')
+            ], wallet1.address)
+        ]);
+
+        // Initiate dispute against wallet1
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'initiate-dispute', [
+                types.uint(parseInt(projectId)),
+                types.principal(wallet1.address),
+                types.utf8('Suspicious proof submission')
+            ], wallet2.address)
+        ]);
+
+        const disputeId = block.receipts[0].result.expectOk().toString();
+
+        // Vote on dispute
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'vote-on-dispute', [
+                types.uint(parseInt(disputeId)),
+                types.bool(true)
+            ], wallet3.address)
+        ]);
+
+        // Resolve dispute
+        block = chain.mineBlock([
+            Tx.contractCall('ecoweave', 'resolve-dispute', [
+                types.uint(parseInt(disputeId))
             ], deployer.address)
         ]);
 
