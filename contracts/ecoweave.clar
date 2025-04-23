@@ -8,6 +8,12 @@
 (define-constant ERR_NOT_REGISTERED (err u1004))
 (define-constant ERR_PROOF_ALREADY_SUBMITTED (err u1005))
 (define-constant ERR_INVALID_PROOF (err u1006))
+(define-constant ERR_INSUFFICIENT_REPUTATION (err u1007))
+
+;; Project Difficulty Levels
+(define-constant PROJECT_DIFFICULTY_EASY u1)
+(define-constant PROJECT_DIFFICULTY_MEDIUM u2)
+(define-constant PROJECT_DIFFICULTY_HARD u3)
 
 ;; Data maps
 (define-map projects 
@@ -19,7 +25,8 @@
         required-participants: uint,
         current-participants: uint,
         state: uint,
-        reward-per-participant: uint
+        difficulty: uint,
+        base-reward-per-participant: uint
     }
 )
 
@@ -28,7 +35,18 @@
     {
         has-registered: bool,
         proof-submitted: bool,
-        proof-validated: bool
+        proof-validated: bool,
+        contribution-quality: uint
+    }
+)
+
+;; Reputation tracking map
+(define-map user-reputation 
+    principal 
+    {
+        total-score: uint,
+        projects-completed: uint,
+        validation-count: uint
     }
 )
 
@@ -36,6 +54,10 @@
 (define-constant PROJECT_STATE_PROPOSED u1)
 (define-constant PROJECT_STATE_ACTIVE u2)
 (define-constant PROJECT_STATE_COMPLETED u3)
+
+;; Reputation Constants
+(define-constant MIN_REPUTATION_THRESHOLD u10)
+(define-constant REPUTATION_MULTIPLIER u5)
 
 ;; Counters
 (define-data-var next-project-id uint u1)
@@ -118,22 +140,95 @@
     )
 )
 
+;; Reputation Management Functions
+
+;; Update user reputation based on project contributions
+(define-private (update-user-reputation 
+    (participant principal)
+    (project-id uint)
+    (contribution-quality uint)
+)
+    (let 
+        (
+            (current-reputation (default-to 
+                {total-score: u0, projects-completed: u0, validation-count: u0} 
+                (map-get? user-reputation participant)
+            ))
+            (new-reputation {
+                total-score: (+ (get total-score current-reputation) contribution-quality),
+                projects-completed: (+ (get projects-completed current-reputation) u1),
+                validation-count: (get validation-count current-reputation)
+            })
+        )
+        (map-set user-reputation participant new-reputation)
+        new-reputation
+    )
+)
+
+;; Calculate dynamic reward based on project difficulty and user reputation
+(define-private (calculate-dynamic-reward 
+    (base-reward uint)
+    (difficulty uint)
+    (participant principal)
+)
+    (let 
+        (
+            (user-rep (default-to 
+                {total-score: u0, projects-completed: u0, validation-count: u0} 
+                (map-get? user-reputation participant)
+            ))
+            (difficulty-multiplier (if (is-eq difficulty PROJECT_DIFFICULTY_EASY) u1
+                (if (is-eq difficulty PROJECT_DIFFICULTY_MEDIUM) u2 u3)
+            ))
+            (reputation-factor (/ (get total-score user-rep) 
+                (+ (get projects-completed user-rep) u1)
+            ))
+        )
+        (* base-reward (* difficulty-multiplier (+ reputation-factor u1)))
+    )
+)
+
+;; Get user reputation details
+(define-read-only (get-user-reputation (participant principal))
+    (map-get? user-reputation participant)
+)
+
 ;; Validate Project Proof (Community Vote Simulation)
-(define-public (validate-project-proof (project-id uint) (participant principal) (is-valid bool))
+(define-public (validate-project-proof 
+    (project-id uint) 
+    (participant principal) 
+    (is-valid bool)
+)
     (let 
         (
             (project (unwrap! (map-get? projects project-id) ERR_PROJECT_NOT_FOUND))
             (participant-key {project-id: project-id, participant: participant})
             (participant-entry (unwrap! (map-get? project-participants participant-key) ERR_NOT_REGISTERED))
+            (contribution-quality (get contribution-quality participant-entry))
+            (dynamic-reward 
+                (if is-valid 
+                    (calculate-dynamic-reward 
+                        (get base-reward-per-participant project) 
+                        (get difficulty project) 
+                        participant
+                    )
+                    u0
+                )
+            )
         )
         (asserts! (is-eq (get state project) PROJECT_STATE_ACTIVE) ERR_INVALID_PROJECT_STATE)
         (asserts! (get proof-submitted participant-entry) ERR_INVALID_PROOF)
         
-        (map-set project-participants participant-key (merge participant-entry {
-            proof-validated: is-valid
-        }))
+        (map-set project-participants participant-key 
+            (merge participant-entry {proof-validated: is-valid})
+        )
         
-        (ok true)
+        ;; Update user reputation if proof is valid
+        (and is-valid 
+            (update-user-reputation participant project-id contribution-quality)
+        )
+        
+        (ok dynamic-reward)
     )
 )
 

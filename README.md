@@ -1,46 +1,119 @@
 # EcoWeave: Decentralized Community Clean-up Platform
 
 ## Overview
-EcoWeave is a blockchain-based platform that incentivizes and organizes community clean-up projects using the Stacks blockchain and Clarity smart contracts.
+EcoWeave is a blockchain-based platform that incentivizes and organizes community clean-up projects using advanced reputation and reward mechanisms on the Stacks blockchain.
 
 ## Smart Contract Features
 
+### Advanced Project Management
+- Project Creation with Difficulty Levels
+- Reputation-based Participation
+- Dynamic Reward Calculation
+- Comprehensive Proof Submission and Validation
+
 ### Project Lifecycle Management
-- Project Creation: Users can propose clean-up projects
-- Project Registration: Community members can register for projects
-- Proof Submission: Participants submit evidence of completed work
-- Community Validation: Proof validation through community consensus
+- Flexible Project Proposal System
+- Community Member Registration
+- Quality-driven Proof Submission
+- Community-validated Project Completion
 
 ### Key Contract Functions
-- `create-project`: Initiate a new clean-up project
-- `register-for-project`: Join a proposed project
-- `submit-project-proof`: Upload evidence of project completion
-- `validate-project-proof`: Community verification of submitted proofs
+- `create-project`: 
+  - Initiate projects with difficulty levels
+  - Set base rewards and project requirements
+- `register-for-project`: 
+  - Join projects based on reputation
+  - Limit project participation
+- `submit-project-proof`: 
+  - Upload completion evidence
+  - Self-rate contribution quality
+- `validate-project-proof`: 
+  - Community verification of submitted proofs
+  - Dynamic reward calculation
+
+## Reputation System
+### Enhanced Mechanics
+- Comprehensive tracking of user contributions across multiple dimensions
+- Multi-factor reputation scoring including:
+  - Project completion rate
+  - Quality of submitted proofs
+  - Community validation impact
+  - Consistency of participation
+- Dynamic reputation thresholds for project access
+- Reputation-based privileges and rewards
+- Transparent reputation calculation mechanism
+
+### Advanced Project Difficulty Levels
+Our enhanced difficulty system provides a nuanced approach to project classification:
+
+- `PROJECT_DIFFICULTY_EASY`: 
+  - Beginner-friendly clean-up projects
+  - Lower barrier to entry
+  - Shorter duration
+  - Basic skill requirements
+
+- `PROJECT_DIFFICULTY_MEDIUM`: 
+  - Intermediate complexity projects
+  - Requires some prior experience
+  - More complex environmental challenges
+  - Moderate time commitment
+  - Skill-building opportunities
+
+- `PROJECT_DIFFICULTY_HARD`: 
+  - Advanced environmental restoration projects
+  - Comprehensive skill and commitment requirements
+  - Long-term, complex clean-up initiatives
+  - Specialized equipment or expertise needed
+  - Significant community impact
 
 ## Project States
-- `PROJECT_STATE_PROPOSED`: Initial project state
-- `PROJECT_STATE_ACTIVE`: Project is ongoing
-- `PROJECT_STATE_COMPLETED`: Project has been finished and validated
+- `PROJECT_STATE_PROPOSED`: Initial project planning
+- `PROJECT_STATE_ACTIVE`: Project in progress
+- `PROJECT_STATE_COMPLETED`: Validated project completion
 
-## Error Handling
-The contract includes comprehensive error management with specific error codes for various scenarios:
-- `ERR_UNAUTHORIZED`: Invalid permissions
-- `ERR_PROJECT_NOT_FOUND`: Project does not exist
-- `ERR_INVALID_PROJECT_STATE`: Operation not allowed in current project state
-- `ERR_ALREADY_REGISTERED`: Duplicate project registration
-- `ERR_NOT_REGISTERED`: User not registered for project
-- `ERR_PROOF_ALREADY_SUBMITTED`: Duplicate proof submission
-- `ERR_INVALID_PROOF`: Proof does not meet requirements
+## Comprehensive Error Handling
+- `ERR_UNAUTHORIZED`: Permission validation
+- `ERR_PROJECT_NOT_FOUND`: Non-existent project
+- `ERR_INVALID_PROJECT_STATE`: State-based constraints
+- `ERR_ALREADY_REGISTERED`: Prevent duplicate registrations
+- `ERR_NOT_REGISTERED`: Unregistered user actions
+- `ERR_PROOF_ALREADY_SUBMITTED`: Prevent duplicate submissions
+- `ERR_INVALID_PROOF`: Proof requirement validation
+- `ERR_INSUFFICIENT_REPUTATION`: Reputation-based access control
 
-## Development
-- Language: Clarity (Stacks Blockchain)
+## Development Specifications
+- Language: Clarity Smart Contracts
+- Blockchain: Stacks
 - Testing Framework: Clarinet
-- Test Coverage: Full contract functionality tested
+- Comprehensive Test Coverage
 
-## Future Improvements
-- Implement actual token rewards
-- Enhanced proof validation mechanisms
-- More granular project state management
+## Dynamic Reward Calculation
+Our innovative reward system goes beyond traditional linear compensation:
+
+### Key Components of Reward Calculation
+- Base reward determined by project difficulty
+- Multipliers based on:
+  - Individual reputation score
+  - Quality of submitted proof
+  - Community validation rating
+  - Project impact and environmental significance
+- Real-time reward adjustment
+- Transparent and fair compensation model
+
+### Reward Calculation Formula
+`Final Reward = Base Reward * (Reputation Multiplier) * (Quality Score) * (Impact Factor)`
+
+## Future Roadmap
+- Implement machine learning for reward optimization
+- Develop cross-platform reputation tracking
+- Create advanced environmental impact metrics
+- Expand reward mechanisms to include:
+  - Carbon credit integration
+  - Skill-based token bonuses
+  - Community achievement recognitions
+- Develop mobile application for real-time tracking
+- Implement NFT-based achievement and contribution system
+- Explore interoperability with global environmental platforms
 
 ## License
-[Insert License Information]
+[Insert Open-Source License Information]
