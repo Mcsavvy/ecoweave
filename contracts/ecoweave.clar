@@ -50,6 +50,30 @@
     }
 )
 
+;; Disputes Map
+(define-map disputes
+    uint 
+    {
+        project-id: uint,
+        initiator: principal,
+        disputed-participant: principal,
+        state: uint,
+        description: (string-utf8 500),
+        votes-for: uint,
+        votes-against: uint,
+        resolved-in-favor: bool
+    }
+)
+
+;; Dispute Votes Map
+(define-map dispute-votes
+    {dispute-id: uint, voter: principal}
+    {
+        vote: bool,
+        voting-power: uint
+    }
+)
+
 ;; Project states
 (define-constant PROJECT_STATE_PROPOSED u1)
 (define-constant PROJECT_STATE_ACTIVE u2)
@@ -59,8 +83,20 @@
 (define-constant MIN_REPUTATION_THRESHOLD u10)
 (define-constant REPUTATION_MULTIPLIER u5)
 
+;; Dispute Constants
+(define-constant DISPUTE_STATE_OPEN u1)
+(define-constant DISPUTE_STATE_IN_VOTING u2)
+(define-constant DISPUTE_STATE_RESOLVED u3)
+
+;; Error Constants
+(define-constant ERR_DISPUTE_NOT_FOUND (err u1008))
+(define-constant ERR_INVALID_DISPUTE_STATE (err u1009))
+(define-constant ERR_INSUFFICIENT_VOTES (err u1010))
+(define-constant ERR_ALREADY_VOTED (err u1011))
+
 ;; Counters
 (define-data-var next-project-id uint u1)
+(define-data-var next-dispute-id uint u1)
 
 ;; Project Creation
 (define-public (create-project 
@@ -239,4 +275,133 @@
 
 (define-read-only (get-participant-status (project-id uint) (participant principal))
     (map-get? project-participants {project-id: project-id, participant: participant})
+)
+
+;; Initiate a dispute for a project
+(define-public (initiate-dispute 
+    (project-id uint)
+    (disputed-participant principal)
+    (description (string-utf8 500))
+)
+    (let 
+        (
+            (project (unwrap! (map-get? projects project-id) ERR_PROJECT_NOT_FOUND))
+            (participant-key {project-id: project-id, participant: disputed-participant})
+            (participant-entry (unwrap! (map-get? project-participants participant-key) ERR_NOT_REGISTERED))
+            (dispute-id (var-get next-dispute-id))
+        )
+        ;; Validate dispute initiation
+        (asserts! (is-eq (get state project) PROJECT_STATE_ACTIVE) ERR_INVALID_PROJECT_STATE)
+        
+        ;; Create dispute entry
+        (map-set disputes dispute-id {
+            project-id: project-id,
+            initiator: tx-sender,
+            disputed-participant: disputed-participant,
+            state: DISPUTE_STATE_OPEN,
+            description: description,
+            votes-for: u0,
+            votes-against: u0,
+            resolved-in-favor: false
+        })
+        
+        (var-set next-dispute-id (+ dispute-id u1))
+        
+        (ok dispute-id)
+    )
+)
+
+;; Vote on a dispute
+(define-public (vote-on-dispute 
+    (dispute-id uint)
+    (vote bool)
+)
+    (let 
+        (
+            (dispute (unwrap! (map-get? disputes dispute-id) ERR_DISPUTE_NOT_FOUND))
+            (voter-reputation (default-to 
+                {total-score: u0, projects-completed: u0, validation-count: u0} 
+                (map-get? user-reputation tx-sender)
+            ))
+            (voting-power (/ (get total-score voter-reputation) 
+                (+ (get projects-completed voter-reputation) u1)
+            ))
+            (vote-key {dispute-id: dispute-id, voter: tx-sender})
+        )
+        ;; Validate voting conditions
+        (asserts! (is-eq (get state dispute) DISPUTE_STATE_OPEN) ERR_INVALID_DISPUTE_STATE)
+        (asserts! (is-none (map-get? dispute-votes vote-key)) ERR_ALREADY_VOTED)
+        
+        ;; Record vote
+        (map-set dispute-votes vote-key {
+            vote: vote,
+            voting-power: voting-power
+        })
+        
+        ;; Update dispute vote counts
+        (if vote 
+            (map-set disputes dispute-id 
+                (merge dispute {
+                    votes-for: (+ (get votes-for dispute) voting-power),
+                    state: DISPUTE_STATE_IN_VOTING
+                })
+            )
+            (map-set disputes dispute-id 
+                (merge dispute {
+                    votes-against: (+ (get votes-against dispute) voting-power),
+                    state: DISPUTE_STATE_IN_VOTING
+                })
+            )
+        )
+        
+        (ok true)
+    )
+)
+
+;; Resolve a dispute
+(define-public (resolve-dispute (dispute-id uint))
+    (let 
+        (
+            (dispute (unwrap! (map-get? disputes dispute-id) ERR_DISPUTE_NOT_FOUND))
+            (total-votes (+ (get votes-for dispute) (get votes-against dispute)))
+            (dispute-resolved-in-favor (> (get votes-for dispute) (get votes-against dispute)))
+        )
+        ;; Validate dispute resolution
+        (asserts! (is-eq (get state dispute) DISPUTE_STATE_IN_VOTING) ERR_INVALID_DISPUTE_STATE)
+        (asserts! (>= total-votes u10) ERR_INSUFFICIENT_VOTES)
+        
+        ;; Resolve dispute
+        (map-set disputes dispute-id (merge dispute {
+            state: DISPUTE_STATE_RESOLVED,
+            resolved-in-favor: dispute-resolved-in-favor
+        }))
+        
+        ;; Adjust reputation or penalize based on dispute resolution
+        (if dispute-resolved-in-favor
+            ;; If dispute resolved against the participant, penalize reputation
+            (let 
+                (
+                    (current-reputation (default-to 
+                        {total-score: u0, projects-completed: u0, validation-count: u0} 
+                        (map-get? user-reputation (get disputed-participant dispute))
+                    ))
+                    (reduced-reputation {
+                        total-score: (/ (get total-score current-reputation) u2),
+                        projects-completed: (get projects-completed current-reputation),
+                        validation-count: (get validation-count current-reputation)
+                    })
+                )
+                (map-set user-reputation (get disputed-participant dispute) reduced-reputation)
+            )
+            ;; If dispute resolved in favor of the participant, do nothing
+            true
+        )
+        
+        (ok dispute-resolved-in-favor)
+    )
+)
+
+;; Read-only function to get dispute details
+(define-read-only (get-dispute-details (dispute-id uint))
+    (map-get? disputes dispute-id)
 )

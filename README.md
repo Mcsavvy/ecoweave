@@ -3,19 +3,37 @@
 ## Overview
 EcoWeave is a blockchain-based platform that incentivizes and organizes community clean-up projects using advanced reputation and reward mechanisms on the Stacks blockchain.
 
-## Smart Contract Features
+## Features
 
-### Advanced Project Management
-- Project Creation with Difficulty Levels
-- Reputation-based Participation
-- Dynamic Reward Calculation
-- Comprehensive Proof Submission and Validation
+### 1. Smart Contract Functions:
+- Project creation and management
+- Reputation-based participation
+- Advanced proof submission and validation
+- Comprehensive dispute resolution mechanism
+- Community-driven dispute voting system
 
-### Project Lifecycle Management
-- Flexible Project Proposal System
-- Community Member Registration
-- Quality-driven Proof Submission
-- Community-validated Project Completion
+### 2. Reputation Management:
+- Multi-dimensional user contribution tracking
+- Dynamic reputation scoring
+- Project difficulty levels (Easy, Medium, Hard)
+- Transparent reputation growth metrics
+
+### 3. Project Lifecycle Management:
+- Proposed project stage
+- Active participation tracking
+- Proof submission and validation
+- Dispute resolution
+- Project completion and reward distribution
+
+### 4. Enhanced Security:
+- Robust error checking
+- Community-driven dispute resolution
+- Transparent reward calculations
+
+### 5. Technical Specifications:
+- Developed using Clarity Smart Contracts
+- Deployed on Stacks Blockchain
+- Comprehensive test suite using Clarinet
 
 ### Key Contract Functions
 - `create-project`: 
@@ -30,6 +48,15 @@ EcoWeave is a blockchain-based platform that incentivizes and organizes communit
 - `validate-project-proof`: 
   - Community verification of submitted proofs
   - Dynamic reward calculation
+- `initiate-dispute`: 
+  - Raise concerns about project participation
+  - Trigger community-driven dispute resolution
+- `vote-on-dispute`: 
+  - Participate in dispute assessment
+  - Voting power based on individual reputation
+- `resolve-dispute`: 
+  - Community-driven final decision
+  - Potential reputation adjustments for participants
 
 ## Reputation System
 ### Enhanced Mechanics
@@ -80,6 +107,10 @@ Our enhanced difficulty system provides a nuanced approach to project classifica
 - `ERR_PROOF_ALREADY_SUBMITTED`: Prevent duplicate submissions
 - `ERR_INVALID_PROOF`: Proof requirement validation
 - `ERR_INSUFFICIENT_REPUTATION`: Reputation-based access control
+- `ERR_DISPUTE_NOT_FOUND`: Non-existent dispute
+- `ERR_INVALID_DISPUTE_STATE`: Dispute state constraints
+- `ERR_INSUFFICIENT_VOTES`: Not enough community participation
+- `ERR_ALREADY_VOTED`: Prevent duplicate dispute votes
 
 ## Development Specifications
 - Language: Clarity Smart Contracts
